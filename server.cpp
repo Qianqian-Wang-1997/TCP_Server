@@ -52,7 +52,7 @@ void* server::Task(void *x)
           std::lock_guard<std::mutex> guard(kMutex); 
           newSockfd.push_back(desc);
         }
-        usleep(600);
+        usleep(50);
     }
     else 
     {
@@ -117,6 +117,7 @@ void server::Accepted()
   //初始化socket信息
   socklen_t newCliSize = sizeof(cli_addr);
   socketDesc * newCli = new socketDesc;
+	cout<<"wait for guest"<<endl;
   newCli->socket = accept(sockfd, (struct sockaddr *)&cli_addr, &newCliSize);
   cout <<"阿啊阿啊阿啊阿啊:" <<newCli->socket << endl;
 

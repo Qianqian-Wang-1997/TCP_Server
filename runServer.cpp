@@ -8,7 +8,7 @@
 server tcp;
 pthread_t msg_real[MAX_CLIENT_NO];
 int num_message = 0;
-int time_send = 2600;
+int time_send = 2700;
 
 void* send_client(void* sock)
 {
@@ -28,7 +28,8 @@ void* send_client(void* sock)
                   to_string(now->tm_sec);
     cerr << date << endl;
     tcp.Send(date, desc->id);
-    sleep(time_send);
+		sleep(time_send);
+		cout<<"SEND_CLIENT"<<endl;
   }
   pthread_exit(NULL);
   return 0;
@@ -82,9 +83,11 @@ int main(int argc, char **argv)
   std::signal(SIGINT, signal);
 
   pthread_t msg;
-  vector<int> opt = {SO_REUSEADDR, SO_REUSEPORT};
+  //vector<int> opt = {SO_REUSEADDR, SO_REUSEPORT};
+	vector<int> opt = {SO_REUSEADDR};
+	cout<<"ARGV:"<<argv[1]<<endl;
 
-  if (tcp.setupSocket(atoi(argv[0]), opt) == 0)
+  if (tcp.setupSocket(atoi(argv[1]), opt) == 0)
   {
     if(pthread_create(&msg, NULL, receive_client, (void*)0)==0)
     {
@@ -93,9 +96,9 @@ int main(int argc, char **argv)
         tcp.Accepted();
         cerr << "Accepted" << endl;
       }
-    } 
+    }
   }
-  else 
+  else
   {
     cerr << "socket setup error" << endl;
   }
