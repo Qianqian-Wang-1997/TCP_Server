@@ -30,7 +30,8 @@ struct socketDesc
   int socket = -1;
   string ip = "";
   int id = -1;
-  string message; 
+  string message;
+  bool count = false;
 };
 
 class server
@@ -43,23 +44,23 @@ class server
     void Send(string msg, int id); //send()
     void Detach(int id);//关闭线程并初始化
     void Clean(int id); // message清空、
-    //bool isOnline(); //判断client是否在线 return isonline
-    //string GetIpAddr(int id); //return newsockfd[id]->ip
-    //int GetLastClosed(); //判断所有client已传递完毕 //return last_closed
-    //void closed(); //关闭socket close(socketfd)
+    bool isOnline(); //判断client是否在线 return isonline
+    string GetIpAddr(int id); //return newsockfd[id]->ip
+    int GetLastClosed(); //判断所有client已传递完毕
+    void closed(); //关闭socket close(socketfd)
     void error(string errorMessage);
 
   private:
-    int sockfd, n, pid;
+    int sockfd;
     struct sockaddr_in serv_addr;
     struct sockaddr_in cli_addr;
     pthread_t ServThread[MAX_CLIENT_NO];
 
-
-    static bool isonline;
-    static int last_closed;
+    //static
+    static bool isonline; //判断该client是否在线
+    static int last_closed; //判断所有client已传递完毕
     static int num_client;
-    std::mutex kMutex;
+    static std::mutex kMutex;
 
     static vector<socketDesc *> newSockfd; //保存client数据的addr，ip，id
     static char msg[MAXPACKETSIZE];

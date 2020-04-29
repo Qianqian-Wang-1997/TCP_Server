@@ -6,6 +6,8 @@ bool server::isonline;
 int server::last_closed;
 int server::num_client;
 vector<socketDesc *> server::newSockfd;
+std::mutex server::kMutex;
+
 
 void server::error(string errorMessage)
 {
@@ -46,7 +48,7 @@ void* server::Task(void *arg)
         {
           msg[n] = 0;
           desc->message = string(msg);
-          std::lock_guard<std::mutex> guard(mutex); ///存疑 原为Kmutex
+          std::lock_guard<std::mutex> guard(kMutex); 
           Message.push_back(desc);
         }
 
@@ -75,8 +77,17 @@ int server::setupSocket(int port, vector<int> opts)
   if(sockfd < 0){
     cerr<< "socket building fail！"<<endl;
   }
-  
-  serv_addr.sin_family = AF_INET;
+
+  for (int i = 0; i < opts.size(); i++)
+  {
+    if(setsockopt(sockfd, SOL_SOCKET, opts.at(i), (char *)&opts, sizeof(opts))<0) //保证绑定地址可以有多个socket
+    {
+      cerr << "Setsockopt error!" << endl;
+      return -1;
+    }
+  }
+
+    serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(port);
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
 
@@ -109,7 +120,7 @@ void server::Accepted()
 
  vector<socketDesc *> server:: GetMessage() //返回已己收到的消息
  {
-   std::lock_guard<std::mutex> guard(mutex);
+   std::lock_guard<std::mutex> guard(kMutex);
    return Message;
  }
 
@@ -124,10 +135,29 @@ void server::Clean(int id)
   memset(msg, 0, MAXPACKETSIZE);//初始化msg
 }
 
-void server::Detach(int id)
+void server::Detach(int id) //清初socket之前传来的内容 准备接收下一次收到的消息
 {
   close(newSockfd[id]->socket);
   newSockfd[id]->ip = "";
   newSockfd[id]->id = -1;
   newSockfd[id]->message = "";
+}
+
+bool server::isOnline() //判断client是否在线 
+{
+  return isonline;
+}
+string server::GetIpAddr(int id) //返回处理的socket的ip，便于查看
+{
+  return newSockfd[id]->ip;
+}
+
+void server::closed()   //关闭socket 
+{
+  close(sockfd);
+}
+
+int server::GetLastClosed() //返回最后处理的socket id
+{
+  return last_closed;
 }
