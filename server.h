@@ -64,7 +64,7 @@ class server
 
     static vector<socketDesc *> newSockfd; //保存client数据的addr，ip，id
     static char msg[MAXPACKETSIZE];
-    static vector<socketDesc *> Message;//保存cilent数据的msg
+    //static vector<socketDesc *> Message;//保存cilent数据的msg
 };
 
 #endif

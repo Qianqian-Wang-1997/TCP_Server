@@ -2,7 +2,8 @@
 #include <pthread.h> //多线程
 
 char server::msg[MAXPACKETSIZE]; //发送的msg
-bool server::isonline; 
+//vector<socketDesc *> server::Message;
+bool server::isonline;
 int server::last_closed;
 int server::num_client;
 vector<socketDesc *> server::newSockfd;
@@ -16,10 +17,10 @@ void server::error(string errorMessage)
 }
 
 /* 处理信息 发送回应  argv[0]=port */
-void* server::Task(void *arg)
+void* server::Task(void *x)
 {
-  struct socketDesc *desc = (struct socketDesc *)arg;
-  pthread_detach(pthread_self());//获取现线程
+  struct socketDesc *desc = (struct socketDesc *) x;
+  pthread_detach(pthread_self());
   cerr << "open client:" << desc->id;
 
   while(1)
@@ -49,17 +50,20 @@ void* server::Task(void *arg)
           msg[n] = 0;
           desc->message = string(msg);
           std::lock_guard<std::mutex> guard(kMutex); 
-          Message.push_back(desc);
+          newSockfd.push_back(desc);
         }
-
-    } else 
+        usleep(600);
+    }
+    else 
     {
       cerr<<"接收失败！"<<endl;
+      return 0;
     }
   }
   if(desc !=NULL)
   {
-    free(desc);//释放内存
+    cout << sizeof(desc) << endl;
+    free(desc); //释放内存
   }
   cerr << "Thread done:" << this_thread::get_id() << endl;
   pthread_exit(NULL);
@@ -69,25 +73,29 @@ void* server::Task(void *arg)
 /* 开始接收client*/
 int server::setupSocket(int port, vector<int> opts)
 {
-
+  //初始化sock状态
+  isonline = false;
+  last_closed = -1;
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   memset(&serv_addr, 0, sizeof(serv_addr));
 
   //AF_INET指IPv4地址，SOCK_STREAM指用TCP协议，protocal基本是0，当协议不确定时自动确定协议
-  if(sockfd < 0){
+  if(sockfd < 0)
+  {
     cerr<< "socket building fail！"<<endl;
   }
 
   for (int i = 0; i < opts.size(); i++)
   {
-    if(setsockopt(sockfd, SOL_SOCKET, opts.at(i), (char *)&opts, sizeof(opts))<0) //保证绑定地址可以有多个socket
+    int opt = 1;
+    if(setsockopt(sockfd, SOL_SOCKET, opts.at(i), (char *)&opts, sizeof(opt))<0) //保证绑定地址可以有多个socket
     {
       cerr << "Setsockopt error!" << endl;
       return -1;
     }
   }
 
-    serv_addr.sin_family = AF_INET;
+  serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(port);
   serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
 
@@ -96,6 +104,7 @@ int server::setupSocket(int port, vector<int> opts)
   if (iresult<0)
   {
     error("bind fail!");
+    return -1;
   }
   num_client = 0; //开始接收来到的客户端
   isonline = true;
@@ -105,6 +114,7 @@ int server::setupSocket(int port, vector<int> opts)
 /* 接收客户端 */
 void server::Accepted() 
 {
+  //初始化socket信息
   socklen_t newCliSize = sizeof(cli_addr);
   socketDesc * newCli = new socketDesc;
   newCli->socket = accept(sockfd, (struct sockaddr *)&cli_addr, &newCliSize);
@@ -121,7 +131,7 @@ void server::Accepted()
  vector<socketDesc *> server:: GetMessage() //返回已己收到的消息
  {
    std::lock_guard<std::mutex> guard(kMutex);
-   return Message;
+   return newSockfd;
  }
 
 void server::Send(string msg, int id)
@@ -131,7 +141,7 @@ void server::Send(string msg, int id)
 
 void server::Clean(int id)
 {
-  Message[id]->message = ""; //clear nemory
+  newSockfd[id]->message = ""; //clear nemory
   memset(msg, 0, MAXPACKETSIZE);//初始化msg
 }
 
@@ -154,6 +164,7 @@ string server::GetIpAddr(int id) //返回处理的socket的ip，便于查看
 
 void server::closed()   //关闭socket 
 {
+  cout << "close socket" << endl;
   close(sockfd);
 }
 

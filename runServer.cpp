@@ -1,5 +1,6 @@
 #include "server.h"
 #include<iostream>
+#include<csignal>
 #include<ctime> //show time
 
 using namespace std;
@@ -40,7 +41,7 @@ void* receive_client(void * sock)
   while(1)
   {
     desc = tcp.GetMessage();
-    for (int i =0; i < desc.size(); i++)
+    for (int i = 0; i < desc.size(); i++)
     {
       if(desc[i]->message !="")
       {
@@ -53,25 +54,32 @@ void* receive_client(void * sock)
           }
         num_message++; //计数来的client个数
         }
-        cout << "id:" << desc[i]->id 
-             << "ip:" << desc[i]->ip 
-             << "message:" << desc[i]->message 
+        cout << "id:" << desc[i]->id <<endl
+             << "ip:" << desc[i]->ip <<endl
+             << "message:" << desc[i]->message <<endl
              << "socketno:" << desc[i]->count << endl;
         tcp.Clean(i);
       }
     }
-    sleep(time_send);
+    usleep(1000);
   }
   return 0;
+}
+/*程序退出时 关闭线程 */
+void signal(int use)
+{
+  tcp.closed();
+  exit(1);
 }
 
 int main(int argc, char *argv[])
 {
-  if(argc<2)
+  if(argc < 2)
   {
-    cerr << "参数错误！./server port";
+    cerr << "参数错误！./server port" << endl;
     return 0;
   }
+  std::signal(SIGINT, signal);
 
   pthread_t msg;
   vector<int> opt = {SO_REUSEADDR, SO_REUSEPORT};
