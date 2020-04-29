@@ -22,8 +22,8 @@
 
 using namespace std;
 
-#define MAXPACKETSIZE 40960 //40MB
-#define MAX_CLIENT_NO 50 //最多50个客户端
+#define MAXPACKETSIZE 1//40MB
+#define MAX_CLIENT_NO 2 //最多50个客户端
 
 struct socketDesc
 {

@@ -21,7 +21,7 @@ void* server::Task(void *x)
 {
   struct socketDesc *desc = (struct socketDesc *) x;
   pthread_detach(pthread_self());
-  cerr << "open client:" << desc->id;
+  cerr << "open client:" << desc->id << endl;
 
   while(1)
   {
@@ -97,15 +97,15 @@ int server::setupSocket(int port, vector<int> opts)
 
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(port);
-  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
+  serv_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  int iresult = 0;
-  iresult = ::bind(sockfd, (sockaddr *)&serv_addr, sizeof(serv_addr));
-  if (iresult<0)
-  {
-    error("bind fail!");
-    return -1;
-  }
+  int temp = ::bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+
+  if(listen(sockfd,5) < 0){
+		cerr << "Errore listen" << endl;
+		return -1;
+	}
+  
   num_client = 0; //开始接收来到的客户端
   isonline = true;
   return 0;
@@ -118,6 +118,8 @@ void server::Accepted()
   socklen_t newCliSize = sizeof(cli_addr);
   socketDesc * newCli = new socketDesc;
   newCli->socket = accept(sockfd, (struct sockaddr *)&cli_addr, &newCliSize);
+  cout <<"阿啊阿啊阿啊阿啊:" <<newCli->socket << endl;
+
   newCli->id = num_client;
   newCli->ip = inet_ntoa(cli_addr.sin_addr);
   newSockfd.push_back(newCli);

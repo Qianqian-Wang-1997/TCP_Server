@@ -3,12 +3,12 @@
 #include<csignal>
 #include<ctime> //show time
 
-using namespace std;
+//using namespace std;
 
 server tcp;
 pthread_t msg_real[MAX_CLIENT_NO];
 int num_message = 0;
-int time_send = 1200;
+int time_send = 2600;
 
 void* send_client(void* sock)
 {
@@ -18,7 +18,7 @@ void* send_client(void* sock)
   {
     if(!tcp.isOnline() && tcp.GetLastClosed()==desc->id)
     {
-      cerr << "close client id:" << desc->id << "ip:" << desc->ip << endl;
+      cerr << "close client id:" << desc->id << endl<< "ip:" << desc->ip << endl;
       break;
     }
     time_t t = time(0);
@@ -54,10 +54,10 @@ void* receive_client(void * sock)
           }
         num_message++; //计数来的client个数
         }
-        cout << "id:" << desc[i]->id <<endl
-             << "ip:" << desc[i]->ip <<endl
-             << "message:" << desc[i]->message <<endl
-             << "socketno:" << desc[i]->count << endl;
+        cout << "id:       " << desc[i]->id <<endl
+             << "ip:       " << desc[i]->ip <<endl
+             << "message:  " << desc[i]->message <<endl
+             << "socketno: " << desc[i]->count << endl;
         tcp.Clean(i);
       }
     }
@@ -72,7 +72,7 @@ void signal(int use)
   exit(1);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
   if(argc < 2)
   {
