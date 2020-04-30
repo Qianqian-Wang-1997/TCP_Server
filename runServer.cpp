@@ -10,6 +10,16 @@ pthread_t msg_real[MAX_CLIENT_NO];
 int num_message = 0;
 int time_send = 2700;
 
+string returnTime()
+{
+  time_t t = time(0);
+  tm *now = localtime(&t);
+  string date = to_string(now->tm_hour) + ":" +
+                  to_string(now->tm_min) + ":" +
+                  to_string(now->tm_sec);
+  return date;
+}
+
 void* send_client(void* sock)
 {
   struct socketDesc *desc = (struct socketDesc *)sock;
@@ -21,15 +31,11 @@ void* send_client(void* sock)
       cerr << "close client id:" << desc->id << endl<< "ip:" << desc->ip << endl;
       break;
     }
-    time_t t = time(0);
-    tm *now = localtime(&t);
-    string date = to_string(now->tm_hour) + ":" +
-                  to_string(now->tm_min) + ":" +
-                  to_string(now->tm_sec);
-    cerr << date << endl;
+    string date = returnTime();
+    cerr << "server send client date!!!!!!:" << date << endl;
     tcp.Send(date, desc->id);
 		sleep(time_send);
-		cout<<"SEND_CLIENT"<<endl;
+		//cerr<<"SEND_CLIENT"<<endl;
   }
   pthread_exit(NULL);
   return 0;
@@ -55,14 +61,14 @@ void* receive_client(void * sock)
           }
         num_message++; //计数来的client个数
         }
-        cout << "id:       " << desc[i]->id <<endl
-             << "ip:       " << desc[i]->ip <<endl
-             << "message:  " << desc[i]->message <<endl
-             << "socketno: " << desc[i]->count << endl;
+        cerr << "id:       " << desc[i]->id << endl
+             << "ip:       " << desc[i]->ip << endl
+             << "message:  " << desc[i]->message << endl;
+        //<< "socketno: " << desc[i]->count << endl;
         tcp.Clean(i);
       }
     }
-    usleep(1000);
+    usleep(600);
   }
   return 0;
 }
@@ -83,9 +89,8 @@ int main(int argc, char **argv)
   std::signal(SIGINT, signal);
 
   pthread_t msg;
-  //vector<int> opt = {SO_REUSEADDR, SO_REUSEPORT};
-	vector<int> opt = {SO_REUSEADDR};
-	cout<<"ARGV:"<<argv[1]<<endl;
+  vector<int> opt = {SO_REUSEADDR, SO_REUSEPORT};
+	//cout<<"ARGV:"<<argv[1]<<endl;
 
   if (tcp.setupSocket(atoi(argv[1]), opt) == 0)
   {

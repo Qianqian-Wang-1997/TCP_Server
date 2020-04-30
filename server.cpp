@@ -38,7 +38,7 @@ void* server::Task(void *x)
 
           int id = desc->id;
           newSockfd.erase(remove_if(newSockfd.begin(), newSockfd.end(), [id](socketDesc *device) { return device->id == id; }),
-                          newSockfd.end()); //删除已完成的客户端请求 报错报错
+                          newSockfd.end()); //删除已完成的客户端请求
           if(num_client>0)
           {
             num_client--;
@@ -52,7 +52,7 @@ void* server::Task(void *x)
           std::lock_guard<std::mutex> guard(kMutex); 
           newSockfd.push_back(desc);
         }
-        usleep(50);
+        usleep(700);
     }
     else 
     {
@@ -117,14 +117,12 @@ void server::Accepted()
   //初始化socket信息
   socklen_t newCliSize = sizeof(cli_addr);
   socketDesc * newCli = new socketDesc;
-	cout<<"wait for guest"<<endl;
+	cerr<<"wait for guest........."<<endl;
   newCli->socket = accept(sockfd, (struct sockaddr *)&cli_addr, &newCliSize);
-  cout <<"阿啊阿啊阿啊阿啊:" <<newCli->socket << endl;
-
   newCli->id = num_client;
   newCli->ip = inet_ntoa(cli_addr.sin_addr);
   newSockfd.push_back(newCli);
-  cerr << "new client id:" << newSockfd[num_client]->id 
+  cerr << "new client id:" << newSockfd[num_client]->id <<endl
        << "new client ip:" << newSockfd[num_client]->ip << endl;
   pthread_create(&ServThread[num_client], NULL, &Task, (void *)newSockfd[num_client]);
   isonline = true;
