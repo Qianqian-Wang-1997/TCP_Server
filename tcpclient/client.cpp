@@ -62,24 +62,32 @@ bool client::sendMsg(string msg)
   else
   {
     return false;
+    cout << "false!!" << endl;
   }
+  cout << "true！！！" << endl;
   return true; //消息发送成功
 }
 
-/* 返回收到的信息 */
+/* 返回收到的信息(时间戳) */
 string client::receive(int size)
 {
+  cout << "revceive 1"<< endl;
   char temp[size];
   memset(&temp[0], 0, sizeof(temp));
-  if(recv(sock, temp, size, 0) < 0)
+  cout << "revceive 2"<< endl;
+
+  int ack = recv(sock, temp, size, 0); // 第一次返回收到字节数 8 即时间戳长度
+  cout <<"ack:::"<< ack <<endl; //debug
+
+  if (ack < 0) //sleep后在这里消失
   {
     cerr << "receive fail!" << endl;
-    return NULL;
+    return 0;
   }
-
-  string reply; 
+  string reply;
   reply = temp;
-  return reply; //返回server接收成功信息
+  cout << "reply::: " << reply << endl; //debug 
+  return reply; //返回server接收成功信息(时间戳)
 }
 
 void client::Close()

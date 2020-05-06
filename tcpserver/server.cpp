@@ -19,15 +19,17 @@ void server::error(string errorMessage)
 /* 处理信息 发送回应  argv[0]=port */
 void* server::Task(void *x)
 {
-  int n;
   struct socketDesc *desc = (struct socketDesc *) x;
   pthread_detach(pthread_self());
   cerr << "open client:" << desc->id << endl;
-
+  
   while(1)
   {
-    n = recv(desc->socket, msg, MAXPACKETSIZE, 0);
-    if(n!=-1) //接收成功
+    int n;
+    n = recv(desc->socket, msg, MAXPACKETSIZE, 0); //收到client的信息 返回msg的长度
+    cout << "recv的返回值：" <<n<< msg<<endl;
+
+    if (n != -1) //接收成功
     {
         if(n == 0) //消息为空 
         {
@@ -44,27 +46,26 @@ void* server::Task(void *x)
             num_client--;
           }
           break;
-        }
-        else
-        {
-          msg[n] = 0;
+
+        } else {
+          msg[n] = 0; //字符结束符
           desc->message = string(msg);
-          std::lock_guard<std::mutex> guard(kMutex); 
-          newSockfd.push_back(desc);
+          // newSockfd.push_back(desc);
         }
-        usleep(700);
-    }
-    else 
-    {
+    } else  {
       cerr<<"接收失败！"<<endl;
       return 0;
     }
-  }
+
+    usleep(600);
+  } 
+
   if(desc !=NULL)
   {
     cout << sizeof(desc) << endl;
     free(desc); //释放内存
   }
+  
   cerr << "Thread done:" << this_thread::get_id() << endl;
   pthread_exit(NULL);
   return 0;
@@ -117,13 +118,17 @@ void server::Accepted()
   //初始化socket信息
   socklen_t newCliSize = sizeof(cli_addr);
   socketDesc * newCli = new socketDesc;
-	cerr<<"wait for guest........."<<endl;
+	cout<<"wait for guest"<<endl;
   newCli->socket = accept(sockfd, (struct sockaddr *)&cli_addr, &newCliSize);
+  //cout <<"阿啊阿啊阿啊阿啊:" <<newCli->socket << endl;
+
   newCli->id = num_client;
   newCli->ip = inet_ntoa(cli_addr.sin_addr);
   newSockfd.push_back(newCli);
   cerr << "new client id:" << newSockfd[num_client]->id 
-       << "              new client ip:" << newSockfd[num_client]->ip << endl;
+       << "new client ip:" << newSockfd[num_client]->ip 
+       <<"new client sock:"<< newSockfd[num_client]->socket
+       <<"new client msg:"<< newSockfd[num_client]->message <<endl;
   pthread_create(&ServThread[num_client], NULL, &Task, (void *)newSockfd[num_client]);
   isonline = true;
   num_client++;
@@ -131,7 +136,6 @@ void server::Accepted()
 
  vector<socketDesc *> server:: GetMessage() //返回已己收到的消息
  {
-   std::lock_guard<std::mutex> guard(kMutex);
    return newSockfd;
  }
 
@@ -146,7 +150,7 @@ void server::Clean(int id)
   memset(msg, 0, MAXPACKETSIZE);//初始化msg
 }
 
-void server::Detach(int id) //清初socket之前传来的内容 准备接收下一次收到的消息
+void server::Detach(int id) //清初该socket之前传来的内容 准备下一次重新建立连接
 {
   close(newSockfd[id]->socket);
   newSockfd[id]->ip = "";

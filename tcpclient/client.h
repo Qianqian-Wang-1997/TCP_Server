@@ -23,7 +23,7 @@ class client
     client();
     bool setuplink(string address, int port);
     bool sendMsg(string msg);
-    string receive(int size = 4096);
+    string receive(int size = 8);
     void Close();
 
   private:

@@ -12,26 +12,35 @@ void signal_exit(int x)
 
 int main(int argc, char **argv)
 {
-  if(argc != 4)
+  /*if(argc != 4)
   {
     cerr << "client参数错误！" << endl;
     return 0;
   }
+  */
 
   signal(SIGINT, signal_exit); //退出程序
 
   char *addr = argv[1];
   int port = atoi(argv[2]);
   tcp.setuplink(addr, port);
-  while(1)
+  string msg = "";
+
+  while (cin >> msg)
   {
-    tcp.sendMsg(argv[3]);
+    bool sendtoserver = tcp.sendMsg(msg);
+    //cout << "sendtoserver:" << sendtoserver<< endl; ///
     string recvMsg = tcp.receive();
     if(recvMsg!="")
     {
       cout << recvMsg << endl;
+      recvMsg = "";
     }
-    sleep(5);
+    
+    cout << "msg1:::" << msg << endl;
+    msg = "";
+    cout << "msg2:::" << msg << endl;
+    sleep(1); //循环发送
   }
   return 0;
 }

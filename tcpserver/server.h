@@ -22,8 +22,8 @@
 
 using namespace std;
 
-#define MAXPACKETSIZE 2048//128kb
-#define MAX_CLIENT_NO 50 //最多50个客户端
+#define MAXPACKETSIZE 128//40MB
+#define MAX_CLIENT_NO 10 //最多50个客户端
 
 struct socketDesc
 {
@@ -39,7 +39,7 @@ class server
   public:
     static void* Task(void *arg); //处理线程
     int setupSocket(int port, vector<int> opts); //建立连接 setsocketopt,bind,listen
-    void Accepted(); //接收客户端 多线程建立
+    void Accepted(); //接收客户端 多线程建立?
     vector<socketDesc *> GetMessage(); //返回已己收到的消息
     void Send(string msg, int id); //send()
     void Detach(int id);//关闭线程并初始化
